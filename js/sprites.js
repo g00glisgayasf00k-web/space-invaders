@@ -100,17 +100,24 @@ export const SPRITES = {
     height: 8,
   },
 
+  // Sleek fighter — 1=hull, 2=cockpit, 3=engine glow
   player: {
     pixels: [
-      [0,0,0,0,1,0,0,0,0,0,0,0,0],
+      [0,0,0,0,0,1,0,0,0,0,0,0,0],
       [0,0,0,0,1,1,1,0,0,0,0,0,0],
+      [0,0,0,1,1,2,1,1,0,0,0,0,0],
       [0,0,1,1,1,1,1,1,1,0,0,0,0],
+      [0,1,1,1,1,1,1,1,1,1,0,0,0],
       [1,1,1,1,1,1,1,1,1,1,1,0,0],
-      [1,1,1,1,1,1,1,1,1,1,1,1,1],
+      [0,1,0,1,3,3,3,1,0,1,0,0,0],
     ],
-    color: COLORS.yellow,
+    palette: {
+      1: COLORS.yellow,
+      2: '#7df9ff',
+      3: '#ff6b35',
+    },
     width: 13,
-    height: 5,
+    height: 7,
   },
 
   ufo: {
@@ -176,6 +183,24 @@ export function snap(v) {
   return v | 0;
 }
 
+export function drawPlayerShip(ctx, sprite, x, y, scale = 1) {
+  const pixels = sprite.pixels;
+  const palette = sprite.palette || { 1: sprite.color || COLORS.yellow };
+  const ox = snap(x);
+  const oy = snap(y);
+  const s = Math.max(1, snap(scale));
+
+  for (let row = 0; row < pixels.length; row++) {
+    for (let col = 0; col < pixels[row].length; col++) {
+      const v = pixels[row][col];
+      if (v) {
+        ctx.fillStyle = palette[v] || COLORS.yellow;
+        ctx.fillRect(ox + col * s, oy + row * s, s, s);
+      }
+    }
+  }
+}
+
 export function drawPixelSprite(ctx, sprite, x, y, scale = 1, frameIndex = 0) {
   const pixels = sprite.frames
     ? sprite.frames[frameIndex % sprite.frames.length]
@@ -216,16 +241,27 @@ export function drawAlienBullet(ctx, x, y, scale = 1, frame = 0) {
   }
 }
 
-export function drawPlayerBulletTrail(ctx, bullet, scale = 1) {
+export function drawPlayerBullet(ctx, bullet, scale = 1) {
   const s = Math.max(1, snap(scale));
-  const trailLen = 4;
-
+  const x = snap(bullet.x) - 1;
+  const y = snap(bullet.y);
   ctx.fillStyle = COLORS.yellow;
-  for (let i = 1; i <= trailLen; i++) {
-    const tx = snap(bullet.x + bullet.vx * i * 0.06);
-    const ty = snap(bullet.y + bullet.vy * i * 0.06);
-    ctx.fillRect(tx, ty, s, s);
-  }
+  ctx.fillRect(x, y, 3, s * 3);
   ctx.fillStyle = COLORS.white;
-  ctx.fillRect(snap(bullet.x), snap(bullet.y), s, s);
+  ctx.fillRect(x + 1, y, s, s);
+}
+
+export function drawPowerupPickup(ctx, pickup, scale = 1, anim = 0) {
+  const s = Math.max(1, snap(scale));
+  const ox = snap(pickup.x);
+  const oy = snap(pickup.y);
+  const pulse = anim % 2 === 0;
+  const color = pickup.color;
+
+  ctx.fillStyle = pulse ? color : '#ffffff';
+  ctx.fillRect(ox, oy + s, s * 3, s);
+  ctx.fillRect(ox + s, oy, s, s * 5);
+  ctx.fillRect(ox + s * 2, oy + s, s, s * 3);
+  ctx.fillStyle = '#000';
+  ctx.fillRect(ox + s, oy + s * 2, s, s);
 }

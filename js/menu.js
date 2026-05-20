@@ -114,9 +114,8 @@ export class MenuUI {
     set('acc-ufos', String(s.ufosHit));
     set('acc-last', formatScore(s.lastScore));
 
-    const names = ['SINGLE', 'DOUBLE', 'TRIPLE'];
     const badge = document.getElementById('acc-weapon-badge');
-    if (badge) badge.textContent = names[this.game.weaponLevel] || 'Single';
+    if (badge) badge.textContent = this.game._activePowerupText?.() || 'Single';
   }
 
   startGame() {
@@ -134,11 +133,11 @@ export class MenuUI {
     this.showScreen('screen-welcome');
   }
 
-  showWeaponUpgrade(name) {
+  showPowerUp(label) {
     if (!this.toast) return;
-    this.toast.textContent = `${name} SHOT!`;
+    this.toast.textContent = label;
     this.toast.classList.add('show');
     clearTimeout(this._toastTimer);
-    this._toastTimer = setTimeout(() => this.toast.classList.remove('show'), 1600);
+    this._toastTimer = setTimeout(() => this.toast.classList.remove('show'), 1800);
   }
 }
