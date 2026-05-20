@@ -2,9 +2,12 @@
 // Uses pure Node to write simple PNG files with pngjs alternative - canvas not available
 // Fallback: write SVG and note user can convert; we'll use a tiny PNG encoder inline.
 
-const fs = require('fs');
-const path = require('path');
-const zlib = require('zlib');
+import fs from 'fs';
+import path from 'path';
+import zlib from 'zlib';
+import { fileURLToPath } from 'url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 function crc32(buf) {
   let c = 0xffffffff;
