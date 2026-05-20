@@ -246,6 +246,59 @@ export function drawAlienBullet(ctx, x, y, scale = 1, frame = 0) {
   }
 }
 
+/**
+ * Pixel-perfect bullet vs sprite — any graze on a solid pixel counts as a hit.
+ * Samples densely along the bullet's path from last frame to now.
+ */
+export function bulletHitsSprite(bullet, sprite, originX, originY, frameIndex = 0) {
+  const pixels = sprite.frames
+    ? sprite.frames[frameIndex % sprite.frames.length]
+    : sprite.pixels;
+  if (!pixels?.length) return false;
+
+  const x0 = bullet.px ?? bullet.x;
+  const y0 = bullet.py ?? bullet.y;
+  const x1 = bullet.x;
+  const y1 = bullet.y;
+  const rows = pixels.length;
+  const cols = pixels[0].length;
+
+  const ox = originX;
+  const oy = originY;
+  const right = ox + cols;
+  const bottom = oy + rows;
+
+  const pathMinX = Math.min(x0, x1) - 2;
+  const pathMaxX = Math.max(x0, x1) + 2;
+  const pathMinY = Math.min(y0, y1) - 2;
+  const pathMaxY = Math.max(y0, y1) + 2;
+  if (pathMaxX < ox || pathMinX > right || pathMaxY < oy || pathMinY > bottom) {
+    return false;
+  }
+
+  const dist = Math.hypot(x1 - x0, y1 - y0);
+  const steps = Math.max(24, Math.ceil(dist / 0.35));
+
+  for (let s = 0; s <= steps; s++) {
+    const t = s / steps;
+    const wx = x0 + (x1 - x0) * t;
+    const wy = y0 + (y1 - y0) * t;
+    const lx = Math.floor(wx - ox);
+    const ly = Math.floor(wy - oy);
+
+    for (let dy = -1; dy <= 1; dy++) {
+      for (let dx = -1; dx <= 1; dx++) {
+        const col = lx + dx;
+        const row = ly + dy;
+        if (row >= 0 && row < rows && col >= 0 && col < cols && pixels[row][col]) {
+          return true;
+        }
+      }
+    }
+  }
+  return false;
+}
+
 export function drawPlayerBullet(ctx, bullet, scale = 1) {
   const s = Math.max(1, snap(scale));
   const tipX = snap(bullet.x);

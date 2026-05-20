@@ -6,6 +6,7 @@ import {
   drawPaletteSprite,
   drawAlienBullet,
   drawPlayerBullet,
+  bulletHitsSprite,
   snap,
 } from './sprites.js';
 import { AudioManager } from './audio.js';
@@ -22,8 +23,6 @@ import {
 const GAME_WIDTH = 224;
 const GAME_HEIGHT = 256;
 const UFO_POINTS = [50, 100, 150, 300];
-const BULLET_HALF_W = 1.5;
-const BULLET_HALF_H = 2;
 const MAX_BULLETS_NORMAL = 4;
 const MAX_BULLETS_RAPID = 10;
 
@@ -220,42 +219,13 @@ export class SpaceInvadersGame {
     return ax < bx + bw && ax + aw > bx && ay < by + bh && ay + ah > by;
   }
 
-  /** Sample bullet path from prev position to current (works for straight & spread shots) */
-  _bulletPathHitsBox(bullet, bx, by, bw, bh) {
-    const x0 = bullet.px ?? bullet.x;
-    const y0 = bullet.py ?? bullet.y;
-    const x1 = bullet.x;
-    const y1 = bullet.y;
-    const dist = Math.hypot(x1 - x0, y1 - y0);
-    const steps = Math.max(8, Math.ceil(dist / 1.2));
-
-    for (let i = 0; i <= steps; i++) {
-      const t = i / steps;
-      const x = x0 + (x1 - x0) * t;
-      const y = y0 + (y1 - y0) * t;
-      if (this._rectHit(
-        x - BULLET_HALF_W,
-        y - BULLET_HALF_H,
-        BULLET_HALF_W * 2,
-        BULLET_HALF_H * 2,
-        bx,
-        by,
-        bw,
-        bh
-      )) {
-        return true;
-      }
-    }
-    return false;
-  }
-
   _bulletPathHitsBunker(bullet) {
     const x0 = bullet.px ?? bullet.x;
     const y0 = bullet.py ?? bullet.y;
     const x1 = bullet.x;
     const y1 = bullet.y;
     const dist = Math.hypot(x1 - x0, y1 - y0);
-    const steps = Math.max(6, Math.ceil(dist / 1.5));
+    const steps = Math.max(16, Math.ceil(dist / 0.5));
 
     for (let i = 0; i <= steps; i++) {
       const t = i / steps;
@@ -264,28 +234,6 @@ export class SpaceInvadersGame {
       if (this._hitBunker(x, y)) return true;
     }
     return false;
-  }
-
-  _alienHitbox(a) {
-    const sp = SPRITES[a.type];
-    const padX = 2;
-    const padY = 1;
-    return {
-      x: a.x + padX,
-      y: a.y + padY,
-      w: Math.max(2, sp.width - padX * 2),
-      h: Math.max(3, sp.height - padY * 2),
-    };
-  }
-
-  _ufoHitbox() {
-    const pad = 2;
-    return {
-      x: this.ufo.x + pad,
-      y: this.ufo.y + 1,
-      w: SPRITES.ufo.width - pad * 2,
-      h: SPRITES.ufo.height - 2,
-    };
   }
 
   _moveAliens() {
@@ -541,19 +489,15 @@ export class SpaceInvadersGame {
       if (b.dead) continue;
       let hit = false;
 
-      if (this.ufo) {
-        const box = this._ufoHitbox();
-        if (this._bulletPathHitsBox(b, box.x, box.y, box.w, box.h)) {
-          this._destroyUfo();
-          hit = true;
-        }
+      if (this.ufo && bulletHitsSprite(b, SPRITES.ufo, this.ufo.x, this.ufo.y)) {
+        this._destroyUfo();
+        hit = true;
       }
 
       if (!hit) {
         for (const a of this.aliens) {
           if (!a.alive) continue;
-          const box = this._alienHitbox(a);
-          if (this._bulletPathHitsBox(b, box.x, box.y, box.w, box.h)) {
+          if (bulletHitsSprite(b, SPRITES[a.type], a.x, a.y, this.alienAnimFrame)) {
             a.alive = false;
             this.score += SPRITES[a.type].points;
             trackAlienKill();
