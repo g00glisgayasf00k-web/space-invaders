@@ -80,16 +80,21 @@ Space invaders/
 
 ## Deploy to the web
 
-### Railway (recommended)
+**Repo:** https://github.com/g00glisgayasf00k-web/space-invaders
 
-**Live repo:** https://github.com/g00glisgayasf00k-web/space-invaders
+### Render (recommended)
 
-1. Go to [railway.app](https://railway.app) and sign in.
-2. **New Project** → **Deploy from GitHub repo** → select `space-invaders`.
-3. Railway detects `npm start` automatically. Click **Deploy**.
-4. Open **Settings** → **Networking** → **Generate Domain** for your public URL.
+1. Go to [dashboard.render.com](https://dashboard.render.com) and sign in.
+2. **New +** → **Blueprint** → connect GitHub → select `space-invaders`.
+3. Render reads `render.yaml` and creates a static site. Click **Apply**.
+4. When the deploy finishes, open the `.onrender.com` URL from the dashboard.
 
-**Optional — auto-deploy on push:** In Railway, open your project → **Settings** → **Tokens** → create a project token. In GitHub, go to **Settings** → **Secrets** → add `RAILWAY_TOKEN`. In Railway **Settings**, copy the service ID and add it as a GitHub repo variable `RAILWAY_SERVICE_ID`. Pushes to `main` will then deploy via GitHub Actions.
+**Manual setup (without Blueprint):** **New +** → **Static Site** → connect `space-invaders` → set **Build Command** to `npm run build:icons` and **Publish Directory** to `.` → **Create Static Site**.
+
+### Railway
+
+1. Go to [railway.app](https://railway.app) → **New Project** → **Deploy from GitHub repo** → `space-invaders`.
+2. **Settings** → **Networking** → **Generate Domain**.
 
 ### Other hosts
 
