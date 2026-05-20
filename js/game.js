@@ -4,26 +4,30 @@ import {
   drawPixelSprite,
   drawAlienBullet,
   drawPlayerBulletTrail,
+  snap,
 } from './sprites.js';
 import { AudioManager } from './audio.js';
 import { InputManager } from './input.js';
+import { trackAlienKill, trackUfoHit, saveLastScore, loadStats } from './menu.js';
 
 const GAME_WIDTH = 224;
 const GAME_HEIGHT = 256;
-const PIXEL_SCALE = 3;
-
 const UFO_POINTS = [50, 100, 150, 300];
 
 export class SpaceInvadersGame {
   constructor(canvas) {
     this.canvas = canvas;
     this.ctx = canvas.getContext('2d');
+    this.ctx.imageSmoothingEnabled = false;
     this.audio = new AudioManager();
+    const stats = loadStats();
+    this.audio.enabled = stats.soundOn;
     this.input = new InputManager();
-    this.scale = PIXEL_SCALE;
+    this.menu = null;
+    this.scale = 3;
     this.lastTime = 0;
     this.animFrame = 0;
-    this.state = 'title'; // title, playing, paused, gameover, levelclear
+    this.state = 'menu'; // menu, playing, paused, gameover, levelclear
     this.pauseLatch = false;
 
     this.reset();
@@ -36,8 +40,7 @@ export class SpaceInvadersGame {
     this.highScore = parseInt(localStorage.getItem('si-highscore') || '0', 10);
     this.lives = 3;
     this.level = 1;
-    this.weaponLevel = 0; // 0=single, 1=double, 2=triple
-    this.weaponTimer = 0;
+    this.weaponLevel = 0; // 0=single, 1=double, 2=triple — upgraded by UFO only
 
     this.player = {
       x: GAME_WIDTH / 2 - 6,
@@ -64,6 +67,20 @@ export class SpaceInvadersGame {
     this.alienShootTimer = 1.5;
     this.alienAnimFrame = 0;
     this.alienSoundsThisStep = 0;
+    this._applyLevelSpeed();
+  }
+
+  setMenu(menu) {
+    this.menu = menu;
+  }
+
+  /** Base speed scales up every level */
+  _applyLevelSpeed() {
+    const lv = this.level;
+    this.alienMoveInterval = Math.max(0.07, 0.72 - lv * 0.055);
+    this.alienSpeed = 7 + lv * 3.5;
+    this.alienStepDown = 6 + Math.min(4, lv);
+    this.alienShootBase = Math.max(0.35, 1.6 - lv * 0.12);
   }
 
   _initAliens() {
@@ -164,8 +181,18 @@ export class SpaceInvadersGame {
     const living = this._livingAliens().length;
     const total = this.aliens.length;
     const ratio = 1 - living / total;
-    this.alienMoveInterval = Math.max(0.12, 0.8 - ratio * 0.65 - (this.level - 1) * 0.05);
-    this.alienSpeed = 8 + ratio * 18 + (this.level - 1) * 2;
+    const lv = this.level;
+    this.alienMoveInterval = Math.max(0.05, (0.72 - lv * 0.055) - ratio * 0.55);
+    this.alienSpeed = (7 + lv * 3.5) + ratio * 16;
+  }
+
+  _upgradeWeapon() {
+    if (this.weaponLevel >= 2) return;
+    this.weaponLevel++;
+    const names = ['SINGLE', 'DOUBLE', 'TRIPLE'];
+    this._updateHud();
+    this.menu?.showWeaponUpgrade(names[this.weaponLevel]);
+    this.menu?.refreshAccount();
   }
 
   _moveAliens() {
@@ -209,7 +236,7 @@ export class SpaceInvadersGame {
     this.alienBullets.push({
       x: alien.x + sprite.width / 2,
       y: alien.y + sprite.height,
-      vy: 70 + this.level * 8,
+      vy: 65 + this.level * 12,
       owner: alien,
       frame: 0,
     });
@@ -222,7 +249,7 @@ export class SpaceInvadersGame {
       x: fromLeft ? -20 : GAME_WIDTH + 4,
       y: 28,
       dir: fromLeft ? 1 : -1,
-      speed: 35,
+      speed: 32 + this.level * 5,
       points: UFO_POINTS[Math.floor(Math.random() * UFO_POINTS.length)],
     };
     this.audio.ufo();
@@ -287,11 +314,6 @@ export class SpaceInvadersGame {
   }
 
   _updatePlaying(dt) {
-    if (this.weaponTimer > 0) {
-      this.weaponTimer -= dt;
-      if (this.weaponTimer <= 0) this.weaponLevel = 0;
-    }
-
     // Player movement
     if (this.input.isLeft()) this.player.x -= this.player.speed * dt;
     if (this.input.isRight()) this.player.x += this.player.speed * dt;
@@ -321,7 +343,10 @@ export class SpaceInvadersGame {
     this.alienShootTimer -= dt;
     if (this.alienShootTimer <= 0) {
       this._alienShoot();
-      this.alienShootTimer = Math.max(0.4, 1.8 - this.level * 0.1 - (1 - this._livingAliens().length / this.aliens.length));
+      this.alienShootTimer = Math.max(
+        0.3,
+        this.alienShootBase - (1 - this._livingAliens().length / this.aliens.length) * 0.5
+      );
     }
 
     // Bullets
@@ -345,6 +370,8 @@ export class SpaceInvadersGame {
         this.score += this.ufo.points;
         this._addExplosion(this.ufo.x + 4, this.ufo.y);
         this.ufo = null;
+        trackUfoHit();
+        this._upgradeWeapon();
         hit = true;
       }
 
@@ -355,6 +382,7 @@ export class SpaceInvadersGame {
           if (this._rectHit(b.x, b.y, 2, 4, a.x, a.y, sp.width, sp.height)) {
             a.alive = false;
             this.score += sp.points;
+            trackAlienKill();
             this._addExplosion(a.x, a.y);
             hit = true;
             break;
@@ -406,7 +434,6 @@ export class SpaceInvadersGame {
     this._addExplosion(this.player.x, this.player.y);
     this.audio.playerHit();
     this.weaponLevel = 0;
-    this.weaponTimer = 0;
     this.bullets = [];
     this.alienBullets = [];
     this._updateHud();
@@ -420,17 +447,20 @@ export class SpaceInvadersGame {
   _gameOver() {
     this.state = 'gameover';
     this.gameOverTimer = 3;
+    saveLastScore(this.score);
     this.audio.gameOver();
   }
 
   _nextLevel() {
     this.level++;
-    this.weaponLevel = Math.min(2, this.weaponLevel + 1);
-    this.weaponTimer = 20;
-    this.alienMoveInterval = Math.max(0.12, 0.8 - (this.level - 1) * 0.05);
+    this._applyLevelSpeed();
     this._initAliens();
+    this.bunkers.forEach((b) => {
+      b.pixels = SPRITES.bunker.pixels.map((row) => [...row]);
+    });
     this.bullets = [];
     this.alienBullets = [];
+    this.alienMoveTimer = 0;
     this.state = 'playing';
     this._updateHud();
   }
@@ -446,7 +476,7 @@ export class SpaceInvadersGame {
       this.pauseLatch = false;
     }
 
-    if (this.state === 'title' || this.state === 'paused') return;
+    if (this.state === 'menu' || this.state === 'paused') return;
 
     if (this.state === 'levelclear') {
       this.levelClearTimer -= dt;
@@ -484,7 +514,7 @@ export class SpaceInvadersGame {
     for (let row = 0; row < bunker.height; row++) {
       for (let col = 0; col < bunker.width; col++) {
         if (bunker.pixels[row][col]) {
-          ctx.fillRect(bunker.x + col, bunker.y + row, 1, 1);
+          ctx.fillRect(snap(bunker.x) + col, snap(bunker.y) + row, 1, 1);
         }
       }
     }
@@ -494,10 +524,7 @@ export class SpaceInvadersGame {
     const ctx = this.ctx;
     this._drawBackground();
 
-    if (this.state === 'title') {
-      this._drawTitle();
-      return;
-    }
+    if (this.state === 'menu') return;
 
     // Bunkers
     for (const b of this.bunkers) this._drawBunker(b);
@@ -541,20 +568,8 @@ export class SpaceInvadersGame {
     ctx.fillText(`SCORE ${String(this.score).padStart(6, '0')}`, 4, 12);
 
     if (this.state === 'paused') this._drawCenterText('PAUSED', 14);
-    if (this.state === 'levelclear') this._drawCenterText(`LEVEL ${this.level - 1} CLEAR!`, 12);
+    if (this.state === 'levelclear') this._drawCenterText(`WAVE ${this.level} CLEAR!`, 12);
     if (this.state === 'gameover') this._drawCenterText('GAME OVER', 14);
-  }
-
-  _drawTitle() {
-    this._drawCenterText('SPACE', 28);
-    this._drawCenterText('INVADERS', 22);
-    this.ctx.fillStyle = COLORS.green;
-    this._drawCenterText('TAP OR PRESS SPACE', 10, GAME_HEIGHT / 2 + 30);
-    this._drawCenterText('TO START', 10, GAME_HEIGHT / 2 + 44);
-    if (this.highScore > 0) {
-      this.ctx.fillStyle = COLORS.yellow;
-      this._drawCenterText(`HIGH ${this.highScore}`, 8, GAME_HEIGHT / 2 + 70);
-    }
   }
 
   _drawCenterText(text, size, y = GAME_HEIGHT / 2) {
@@ -569,23 +584,15 @@ export class SpaceInvadersGame {
     const dt = Math.min(0.05, (timestamp - this.lastTime) / 1000 || 0);
     this.lastTime = timestamp;
 
-    if (this.state === 'title') {
-      if (this.input.consumeFire()) {
-        this.start();
-      }
-      const startBtn = document.getElementById('btn-start');
-      if (startBtn?.dataset.pressed === 'true') {
-        startBtn.dataset.pressed = 'false';
-        this.start();
-      }
-    }
-
     if (this.state === 'gameover' && this.gameOverTimer <= 0) {
-      if (this.input.consumeFire()) this.state = 'title';
+      this.state = 'menu';
+      this.menu?.showMenu();
     }
 
-    this.update(dt);
-    this.draw();
+    if (this.state !== 'menu') {
+      this.update(dt);
+      this.draw();
+    }
     requestAnimationFrame((t) => this.tick(t));
   }
 

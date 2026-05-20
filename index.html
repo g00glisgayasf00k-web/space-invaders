@@ -14,9 +14,118 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/menu.css">
 </head>
 <body>
-  <div id="app">
+  <div id="menu-overlay" class="menu-overlay">
+    <div id="screen-welcome" class="screen active">
+      <div class="arcade-bg">
+        <div class="scanline"></div>
+        <div class="arcade-inner">
+          <div class="pixel-title">Space Invaders</div>
+          <div class="pixel-sub">insert coin to continue</div>
+          <div class="alien-row" aria-hidden="true">
+            <span class="alien" style="color:#f472b6">&#9650;</span>
+            <span class="alien" style="color:#60a5fa">&#9670;</span>
+            <span class="alien" style="color:#4ade80">&#9632;</span>
+            <span class="alien" style="color:#f472b6">&#9650;</span>
+            <span class="alien" style="color:#60a5fa">&#9670;</span>
+            <span class="alien" style="color:#4ade80">&#9632;</span>
+            <span class="alien" style="color:#f472b6">&#9650;</span>
+          </div>
+          <div class="score-row">
+            <div class="score-item">
+              <div class="score-label">High score</div>
+              <div id="welcome-high" class="score-val">000000</div>
+            </div>
+            <div class="score-item">
+              <div class="score-label">Last score</div>
+              <div id="welcome-last" class="score-val">000000</div>
+            </div>
+          </div>
+          <div class="menu-list">
+            <button id="btn-play" class="menu-btn primary" type="button">&#9654; Play now</button>
+            <button id="btn-account" class="menu-btn" type="button">&#9679; My stats</button>
+            <button id="btn-leaderboard" class="menu-btn" type="button">&#9670; High scores</button>
+          </div>
+          <div class="menu-footer">&#169; Space Invaders Arcade</div>
+        </div>
+      </div>
+    </div>
+
+    <div id="screen-account" class="screen">
+      <div class="arcade-bg">
+        <div class="scanline"></div>
+        <div class="arcade-inner">
+          <div class="acc-top">
+            <button id="btn-back-welcome" class="back-btn" type="button">&larr; Back</button>
+            <div class="acc-top-title">Player stats</div>
+            <div style="width:48px"></div>
+          </div>
+          <div class="acc-header">
+            <div class="avatar">SI</div>
+            <div>
+              <div class="acc-name">Pilot</div>
+              <div class="acc-sub">Space Invaders</div>
+              <div class="acc-badges">
+                <span class="badge badge-green">Ready</span>
+                <span id="acc-weapon-badge" class="badge badge-pink">Single</span>
+              </div>
+            </div>
+          </div>
+          <div class="nav-tabs">
+            <button class="nav-tab active" data-tab="tab-stats" type="button">Stats</button>
+            <button class="nav-tab" data-tab="tab-ach" type="button">Tips</button>
+            <button class="nav-tab" data-tab="tab-settings" type="button">Settings</button>
+          </div>
+
+          <div id="tab-stats" style="padding-top:16px">
+            <div class="stat-grid">
+              <div class="stat-card"><div id="acc-high" class="stat-n">000000</div><div class="stat-l">High score</div></div>
+              <div class="stat-card"><div id="acc-last" class="stat-n">000000</div><div class="stat-l">Last score</div></div>
+              <div class="stat-card"><div id="acc-games" class="stat-n">0</div><div class="stat-l">Games</div></div>
+              <div class="stat-card"><div id="acc-aliens" class="stat-n">0</div><div class="stat-l">Aliens killed</div></div>
+              <div class="stat-card"><div id="acc-ufos" class="stat-n">0</div><div class="stat-l">UFOs hit</div></div>
+            </div>
+            <p style="font-family:'Press Start 2P',monospace;font-size:7px;color:#6b7280;line-height:1.8;text-align:center">
+              Shoot the orange UFO to upgrade:<br>
+              Single &rarr; Double &rarr; Triple
+            </p>
+          </div>
+
+          <div id="tab-ach" style="display:none;padding-top:16px">
+            <div class="ach-row">
+              <div class="ach-icon" style="color:#facc15">&#9733;</div>
+              <div><div class="ach-name">Clear the wave</div><div class="ach-desc">Destroy every alien to advance</div></div>
+            </div>
+            <div class="ach-row">
+              <div class="ach-icon" style="color:#fb923c">&#9650;</div>
+              <div><div class="ach-name">UFO hunter</div><div class="ach-desc">Hit UFOs for weapon upgrades</div></div>
+            </div>
+            <div class="ach-row" style="border:none">
+              <div class="ach-icon" style="color:#60a5fa">&#9670;</div>
+              <div><div class="ach-name">Speed up</div><div class="ach-desc">Each level moves faster</div></div>
+            </div>
+          </div>
+
+          <div id="tab-settings" style="display:none;padding-top:16px">
+            <div class="toggle-row">
+              <span class="toggle-label">Sound FX</span>
+              <div id="toggle-sound" class="toggle on" role="switch" aria-checked="true"></div>
+            </div>
+            <div class="toggle-row" style="border:none">
+              <span class="toggle-label">Controls</span>
+              <span class="toggle-label" style="color:#6b7280;font-size:7px">&#8592; &#8594; move · FIRE shoots</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="weapon-toast" class="weapon-toast" aria-live="polite"></div>
+
+  <div id="app" class="game-hidden">
     <header class="hud">
       <div class="hud-item">
         <span class="label">SCORE</span>
@@ -46,7 +155,6 @@
         <span class="label">LIVES</span>
         <span id="lives" class="value lives">♥♥♥</span>
       </div>
-      <button id="btn-start" class="btn-start" type="button">START</button>
     </footer>
 
     <div class="controls">

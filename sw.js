@@ -1,9 +1,11 @@
-const CACHE = 'space-invaders-v1';
+const CACHE = 'space-invaders-v2';
 const ASSETS = [
   './',
   './index.html',
   './css/style.css',
+  './css/menu.css',
   './js/main.js',
+  './js/menu.js',
   './js/game.js',
   './js/sprites.js',
   './js/audio.js',

@@ -148,13 +148,6 @@ export const SPRITES = {
     height: 12,
   },
 
-  playerBullet: {
-    pixels: [[1],[1],[1]],
-    color: COLORS.yellow,
-    width: 1,
-    height: 3,
-  },
-
   explosion: {
     frames: [
       [
@@ -178,58 +171,61 @@ export const SPRITES = {
   },
 };
 
-export function drawPixelSprite(ctx, sprite, x, y, scale, frameIndex = 0) {
+/** Snap to integer pixel grid — prevents blurry / offset pixels */
+export function snap(v) {
+  return v | 0;
+}
+
+export function drawPixelSprite(ctx, sprite, x, y, scale = 1, frameIndex = 0) {
   const pixels = sprite.frames
     ? sprite.frames[frameIndex % sprite.frames.length]
     : sprite.pixels;
-  const color = sprite.color;
+  const ox = snap(x);
+  const oy = snap(y);
+  const s = Math.max(1, snap(scale));
 
-  ctx.fillStyle = color;
+  ctx.fillStyle = sprite.color;
   for (let row = 0; row < pixels.length; row++) {
     for (let col = 0; col < pixels[row].length; col++) {
       if (pixels[row][col]) {
-        ctx.fillRect(
-          Math.floor(x + col * scale),
-          Math.floor(y + row * scale),
-          Math.ceil(scale),
-          Math.ceil(scale)
-        );
+        ctx.fillRect(ox + col * s, oy + row * s, s, s);
       }
     }
   }
 }
 
-export function drawAlienBullet(ctx, x, y, scale, frame) {
+export function drawAlienBullet(ctx, x, y, scale = 1, frame = 0) {
   const pattern = [
-    [1,0],
-    [0,1],
-    [1,0],
-    [0,1],
-    [1,0],
-    [0,1],
-    [1,0],
+    [1, 0],
+    [0, 1],
+    [1, 0],
+    [0, 1],
+    [1, 0],
+    [0, 1],
+    [1, 0],
   ];
-  ctx.fillStyle = COLORS.pink;
+  const ox = snap(x);
+  const oy = snap(y);
+  const s = Math.max(1, snap(scale));
   const offset = frame % 2;
+
+  ctx.fillStyle = COLORS.pink;
   for (let i = 0; i < pattern.length; i++) {
     const col = (pattern[i][0] ? 0 : 1) ^ offset;
-    ctx.fillRect(
-      Math.floor(x + col * scale),
-      Math.floor(y + i * scale),
-      Math.ceil(scale),
-      Math.ceil(scale)
-    );
+    ctx.fillRect(ox + col * s, oy + i * s, s, s);
   }
 }
 
-export function drawPlayerBulletTrail(ctx, bullet, scale) {
+export function drawPlayerBulletTrail(ctx, bullet, scale = 1) {
+  const s = Math.max(1, snap(scale));
   const trailLen = 4;
+
   ctx.fillStyle = COLORS.yellow;
   for (let i = 1; i <= trailLen; i++) {
-    const ty = bullet.y + bullet.vy * i * 0.8;
-    const tx = bullet.x + bullet.vx * i * 0.8;
-    ctx.fillRect(Math.floor(tx), Math.floor(ty), Math.ceil(scale), Math.ceil(scale));
+    const tx = snap(bullet.x + bullet.vx * i * 0.06);
+    const ty = snap(bullet.y + bullet.vy * i * 0.06);
+    ctx.fillRect(tx, ty, s, s);
   }
   ctx.fillStyle = COLORS.white;
-  ctx.fillRect(Math.floor(bullet.x), Math.floor(bullet.y), Math.ceil(scale), Math.ceil(scale));
+  ctx.fillRect(snap(bullet.x), snap(bullet.y), s, s);
 }
