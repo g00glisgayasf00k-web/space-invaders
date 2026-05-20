@@ -1,0 +1,14 @@
+{
+  "appId": "com.spaceinvaders.game",
+  "appName": "Space Invaders",
+  "webDir": ".",
+  "server": {
+    "androidScheme": "https"
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 1500,
+      "backgroundColor": "#000000"
+    }
+  }
+}

@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#000000">
+  <meta name="description" content="Classic Space Invaders — play in your browser or install on phone">
+  <title>Space Invaders</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div id="app">
+    <header class="hud">
+      <div class="hud-item">
+        <span class="label">SCORE</span>
+        <span id="score" class="value">000000</span>
+      </div>
+      <div class="hud-item center">
+        <span class="label">WEAPON</span>
+        <span id="weapon" class="value weapon">SINGLE</span>
+      </div>
+      <div class="hud-item right">
+        <span class="label">HI</span>
+        <span id="high-score" class="value">000000</span>
+      </div>
+    </header>
+
+    <div class="game-wrap">
+      <canvas id="game"></canvas>
+      <div id="touch-zone" class="touch-zone" aria-hidden="true"></div>
+    </div>
+
+    <footer class="hud-bottom">
+      <div class="hud-item">
+        <span class="label">LEVEL</span>
+        <span id="level" class="value">1</span>
+      </div>
+      <div class="hud-item center">
+        <span class="label">LIVES</span>
+        <span id="lives" class="value lives">♥♥♥</span>
+      </div>
+      <button id="btn-start" class="btn-start" type="button">START</button>
+    </footer>
+
+    <div class="controls">
+      <button id="btn-left" class="ctrl-btn" type="button" aria-label="Move left">◀</button>
+      <button id="btn-fire" class="ctrl-btn fire" type="button" aria-label="Fire">FIRE</button>
+      <button id="btn-right" class="ctrl-btn" type="button" aria-label="Move right">▶</button>
+    </div>
+
+    <p class="hint desktop-only">← → move · SPACE fire · P pause</p>
+  </div>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
