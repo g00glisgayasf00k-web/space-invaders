@@ -80,6 +80,19 @@ Space invaders/
 
 ## Deploy to the web
 
+### Railway (recommended)
+
+**Live repo:** https://github.com/g00glisgayasf00k-web/space-invaders
+
+1. Go to [railway.app](https://railway.app) and sign in.
+2. **New Project** → **Deploy from GitHub repo** → select `space-invaders`.
+3. Railway detects `npm start` automatically. Click **Deploy**.
+4. Open **Settings** → **Networking** → **Generate Domain** for your public URL.
+
+**Optional — auto-deploy on push:** In Railway, open your project → **Settings** → **Tokens** → create a project token. In GitHub, go to **Settings** → **Secrets** → add `RAILWAY_TOKEN`. In Railway **Settings**, copy the service ID and add it as a GitHub repo variable `RAILWAY_SERVICE_ID`. Pushes to `main` will then deploy via GitHub Actions.
+
+### Other hosts
+
 Upload the entire folder to any static host (Netlify, GitHub Pages, Firebase Hosting, etc.). Ensure `index.html` is served over HTTPS for PWA install and service worker support.
 
 ## License
