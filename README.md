@@ -11,17 +11,22 @@ A classic Space Invaders arcade game built with HTML5 Canvas. Play in any modern
 - **Mystery UFO** — random bonus points (50–300)
 - **Touch + keyboard controls** — on-screen buttons for phones; arrow keys + space on desktop
 - **High score** saved locally
-- **Works offline** as a Progressive Web App
+- **User accounts** — register, log in, JWT sessions
+- **Global leaderboard** — compete with other players worldwide
+- **Works offline** as a Progressive Web App (login/leaderboard need the server)
 
 ## Quick start (Web)
 
 ```bash
 cd "Space invaders"
+npm install
 npm run build:icons
 npm start
 ```
 
-Open **http://localhost:3000** in your browser.
+Open **http://localhost:3000** — game, login API, and leaderboard all run together.
+
+For static-only local preview (no accounts): `npm run start:static`
 
 On iPhone/Android: open the same URL in Safari/Chrome, then **Add to Home Screen** to install.
 
@@ -75,21 +80,34 @@ Space invaders/
 ├── manifest.json       # PWA manifest
 ├── sw.js               # Offline service worker
 ├── capacitor.config.json
+├── server/             # Express API (auth + scores)
 └── package.json
 ```
+
+## Accounts & leaderboard
+
+1. **Log in / Sign up** from the welcome screen (username, email, password).
+2. **Play** — when a run ends, your score is sent to the server (if logged in).
+3. **Global leaderboard** shows each player’s best score and wave reached.
+4. Your **global rank** appears on the welcome screen when logged in.
+
+Guest play still works — local high scores are kept in the browser without an account.
 
 ## Deploy to the web
 
 **Repo:** https://github.com/g00glisgayasf00k-web/space-invaders
 
-### Render (recommended)
+### Render (recommended — includes login + leaderboard)
 
 1. Go to [dashboard.render.com](https://dashboard.render.com) and sign in.
 2. **New +** → **Blueprint** → connect GitHub → select `space-invaders`.
-3. Render reads `render.yaml` and creates a static site. Click **Apply**.
-4. When the deploy finishes, open the `.onrender.com` URL from the dashboard.
+3. Render deploys a **Node Web Service** (`render.yaml`). Click **Apply**.
+4. `JWT_SECRET` is auto-generated. Open your `.onrender.com` URL.
+5. **Sign up** in the game → play → scores sync to the **Global leaderboard**.
 
-**Manual setup (without Blueprint):** **New +** → **Static Site** → connect `space-invaders` → set **Build Command** to `npm run build:icons` and **Publish Directory** to `.` → **Create Static Site**.
+**Manual setup:** **New +** → **Web Service** → Node → Build: `npm install && npm run build:icons` → Start: `npm start`.
+
+> Opening `index.html` directly or a static-only host will **not** enable accounts. Use the Node deploy.
 
 ### Railway
 

@@ -1,7 +1,10 @@
-# Render Blueprint — https://render.com/docs/blueprint-spec
+# Render Blueprint — Node serves game + login API + global leaderboard
 services:
   - type: web
     name: space-invaders
-    runtime: static
-    buildCommand: npm run build:icons
-    staticPublishPath: .
+    runtime: node
+    buildCommand: npm install && npm run build:icons
+    startCommand: npm start
+    envVars:
+      - key: JWT_SECRET
+        generateValue: true

@@ -1,46 +1,7 @@
-const STORAGE = {
-  high: 'si-highscore',
-  last: 'si-lastscore',
-  games: 'si-games-played',
-  aliens: 'si-aliens-killed',
-  ufos: 'si-ufos-hit',
-  sound: 'si-sound',
-};
+import { formatScore, loadStats, saveLastScore, incrementGamesPlayed, trackAlienKill, trackUfoHit } from './stats.js';
+import { isLoggedIn, fetchMyRank } from './api.js';
 
-export function formatScore(n) {
-  return String(n).padStart(6, '0');
-}
-
-export function loadStats() {
-  return {
-    highScore: parseInt(localStorage.getItem(STORAGE.high) || '0', 10),
-    lastScore: parseInt(localStorage.getItem(STORAGE.last) || '0', 10),
-    gamesPlayed: parseInt(localStorage.getItem(STORAGE.games) || '0', 10),
-    aliensKilled: parseInt(localStorage.getItem(STORAGE.aliens) || '0', 10),
-    ufosHit: parseInt(localStorage.getItem(STORAGE.ufos) || '0', 10),
-    soundOn: localStorage.getItem(STORAGE.sound) !== '0',
-  };
-}
-
-export function saveLastScore(score) {
-  localStorage.setItem(STORAGE.last, String(score));
-}
-
-export function incrementGamesPlayed() {
-  const n = parseInt(localStorage.getItem(STORAGE.games) || '0', 10) + 1;
-  localStorage.setItem(STORAGE.games, String(n));
-  return n;
-}
-
-export function trackAlienKill() {
-  const n = parseInt(localStorage.getItem(STORAGE.aliens) || '0', 10) + 1;
-  localStorage.setItem(STORAGE.aliens, String(n));
-}
-
-export function trackUfoHit() {
-  const n = parseInt(localStorage.getItem(STORAGE.ufos) || '0', 10) + 1;
-  localStorage.setItem(STORAGE.ufos, String(n));
-}
+export { formatScore, loadStats, saveLastScore, incrementGamesPlayed, trackAlienKill, trackUfoHit };
 
 export class MenuUI {
   constructor(game) {
@@ -57,10 +18,6 @@ export class MenuUI {
     document.getElementById('btn-play')?.addEventListener('click', () => this.startGame());
     document.getElementById('btn-account')?.addEventListener('click', () => this.showScreen('screen-account'));
     document.getElementById('btn-back-welcome')?.addEventListener('click', () => this.showScreen('screen-welcome'));
-    document.getElementById('btn-leaderboard')?.addEventListener('click', () => {
-      this.showScreen('screen-account');
-      this.switchTab(document.querySelector('[data-tab="tab-stats"]'), 'tab-stats');
-    });
 
     document.querySelectorAll('.nav-tab').forEach((tab) => {
       tab.addEventListener('click', () => this.switchTab(tab, tab.dataset.tab));
@@ -73,7 +30,7 @@ export class MenuUI {
       soundToggle.addEventListener('click', () => {
         soundToggle.classList.toggle('on');
         const on = soundToggle.classList.contains('on');
-        localStorage.setItem(STORAGE.sound, on ? '1' : '0');
+        localStorage.setItem('si-sound', on ? '1' : '0');
         this.game.audio.enabled = on;
       });
     }
@@ -83,6 +40,7 @@ export class MenuUI {
     document.querySelectorAll('#menu-overlay .screen').forEach((s) => s.classList.remove('active'));
     document.getElementById(id)?.classList.add('active');
     if (id === 'screen-account') this.refreshAccount();
+    if (id === 'screen-welcome') this.refreshWelcome();
   }
 
   switchTab(btn, tabId) {
@@ -94,15 +52,28 @@ export class MenuUI {
     });
   }
 
-  refreshWelcome() {
+  async refreshWelcome() {
     const s = loadStats();
     const hi = document.getElementById('welcome-high');
     const games = document.getElementById('welcome-games');
     const last = document.getElementById('welcome-last');
+    const rank = document.getElementById('welcome-rank');
+    const rankWrap = document.getElementById('welcome-rank-wrap');
+
     if (hi) hi.textContent = formatScore(s.highScore);
     if (games) games.textContent = String(s.gamesPlayed);
-    if (last) {
-      last.textContent = s.lastScore > 0 ? formatScore(s.lastScore) : '------';
+    if (last) last.textContent = s.lastScore > 0 ? formatScore(s.lastScore) : '------';
+
+    if (isLoggedIn()) {
+      if (rankWrap) rankWrap.style.display = 'block';
+      try {
+        const data = await fetchMyRank();
+        if (rank) rank.textContent = data?.rank ? `#${data.rank}` : '—';
+      } catch {
+        if (rank) rank.textContent = '—';
+      }
+    } else if (rankWrap) {
+      rankWrap.style.display = 'none';
     }
   }
 
@@ -137,11 +108,15 @@ export class MenuUI {
     this.showScreen('screen-welcome');
   }
 
-  showPowerUp(label) {
+  showToast(text) {
     if (!this.toast) return;
-    this.toast.textContent = label;
+    this.toast.textContent = text;
     this.toast.classList.add('show');
     clearTimeout(this._toastTimer);
     this._toastTimer = setTimeout(() => this.toast.classList.remove('show'), 1800);
+  }
+
+  showPowerUp(label) {
+    this.showToast(label);
   }
 }

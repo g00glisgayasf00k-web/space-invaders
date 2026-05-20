@@ -33,14 +33,16 @@
             <span class="alien" style="color:#4ade80">&#9632;</span>
             <span class="alien" style="color:#f472b6">&#9650;</span>
           </div>
+          <p id="auth-offline-note" class="auth-note" style="display:none">Leaderboard needs the online server (Render deploy)</p>
+          <p id="welcome-user-line" class="welcome-user" style="display:none">Pilot: <span id="welcome-username"></span></p>
           <div class="score-row">
             <div class="score-item">
-              <div class="score-label">High score</div>
+              <div class="score-label">Local best</div>
               <div id="welcome-high" class="score-val">000000</div>
             </div>
-            <div class="score-item">
-              <div class="score-label">Games played</div>
-              <div id="welcome-games" class="score-val">0</div>
+            <div class="score-item" id="welcome-rank-wrap" style="display:none">
+              <div class="score-label">Global rank</div>
+              <div id="welcome-rank" class="score-val">—</div>
             </div>
             <div class="score-item">
               <div class="score-label">Last run</div>
@@ -49,8 +51,10 @@
           </div>
           <div class="menu-list">
             <button id="btn-play" class="menu-btn primary" type="button">&#9654; Play now</button>
-            <button id="btn-account" class="menu-btn" type="button">&#9679; My stats</button>
-            <button id="btn-leaderboard" class="menu-btn" type="button">&#9670; High scores</button>
+            <button id="btn-leaderboard" class="menu-btn" type="button">&#9670; Global leaderboard</button>
+            <button id="btn-login-screen" class="menu-btn" type="button">&#9679; Log in / Sign up</button>
+            <button id="btn-account" class="menu-btn" type="button">&#9632; My stats</button>
+            <button id="btn-logout" class="menu-btn" type="button" style="display:none">Log out</button>
           </div>
           <div class="menu-footer">&#169; Space Invaders Arcade</div>
         </div>
@@ -67,9 +71,9 @@
             <div style="width:48px"></div>
           </div>
           <div class="acc-header">
-            <div class="avatar">SI</div>
+            <div class="avatar" id="acc-avatar">??</div>
             <div>
-              <div class="acc-name">Pilot</div>
+              <div class="acc-name" id="acc-name">Guest</div>
               <div class="acc-sub">Space Invaders</div>
               <div class="acc-badges">
                 <span class="badge badge-green">Ready</span>
@@ -122,6 +126,51 @@
               <span class="toggle-label" style="color:#6b7280;font-size:7px">&#8592; &#8594; move · FIRE shoots</span>
             </div>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="screen-auth" class="screen">
+      <div class="arcade-bg">
+        <div class="scanline"></div>
+        <div class="arcade-inner">
+          <div class="acc-top">
+            <button type="button" class="back-btn" id="btn-back-auth">&larr; Back</button>
+            <div class="acc-top-title">Account</div>
+            <div style="width:48px"></div>
+          </div>
+          <div class="nav-tabs">
+            <button type="button" class="nav-tab active" id="auth-tab-login">Log in</button>
+            <button type="button" class="nav-tab" id="auth-tab-register">Sign up</button>
+          </div>
+          <p id="auth-error" class="auth-error"></p>
+          <form id="form-login" class="auth-form">
+            <div class="input-row"><label>Email</label><input class="arcade-input" id="login-email" type="email" autocomplete="email" required /></div>
+            <div class="input-row"><label>Password</label><input class="arcade-input" id="login-password" type="password" autocomplete="current-password" required /></div>
+            <button type="submit" class="menu-btn primary">Log in</button>
+          </form>
+          <form id="form-register" class="auth-form" style="display:none">
+            <div class="input-row"><label>Username</label><input class="arcade-input" id="reg-username" maxlength="16" autocomplete="username" required /></div>
+            <div class="input-row"><label>Email</label><input class="arcade-input" id="reg-email" type="email" autocomplete="email" required /></div>
+            <div class="input-row"><label>Password (6+ chars)</label><input class="arcade-input" id="reg-password" type="password" autocomplete="new-password" minlength="6" required /></div>
+            <button type="submit" class="menu-btn primary">Create account</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <div id="screen-leaderboard" class="screen">
+      <div class="arcade-bg">
+        <div class="scanline"></div>
+        <div class="arcade-inner">
+          <div class="acc-top">
+            <button type="button" class="back-btn" id="btn-back-from-leaderboard">&larr; Back</button>
+            <div class="acc-top-title">Global leaderboard</div>
+            <div style="width:48px"></div>
+          </div>
+          <p id="leaderboard-status" class="lb-status">Top pilots worldwide</p>
+          <div id="leaderboard-list" class="leaderboard-list"></div>
+          <p class="auth-note">Log in and finish a game to post your score</p>
         </div>
       </div>
     </div>

@@ -1,10 +1,16 @@
 import { SpaceInvadersGame } from './game.js';
 import { MenuUI } from './menu.js';
+import { AuthUI } from './auth-ui.js';
+import { LeaderboardUI } from './leaderboard-ui.js';
 
 const canvas = document.getElementById('game');
 const game = new SpaceInvadersGame(canvas);
 const menu = new MenuUI(game);
 game.setMenu(menu);
+
+new AuthUI(menu);
+new LeaderboardUI(menu);
+
 game.run();
 
 document.body.addEventListener('touchmove', (e) => {

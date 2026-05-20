@@ -2,8 +2,10 @@
   "name": "space-invaders",
   "version": "1.0.0",
   "description": "Classic Space Invaders for web, Android, and iOS",
+  "type": "module",
   "scripts": {
-    "start": "serve . -l tcp://0.0.0.0:${PORT:-3000}",
+    "start": "node server/index.js",
+    "start:static": "serve . -l tcp://0.0.0.0:${PORT:-3000}",
     "build:icons": "node scripts/generate-icons.js",
     "cap:init": "npx cap init \"Space Invaders\" com.spaceinvaders.game --web-dir .",
     "cap:add:android": "npx cap add android",
@@ -15,6 +17,11 @@
     "ios": "npm run cap:sync && npm run cap:open:ios"
   },
   "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "better-sqlite3": "^11.7.0",
+    "cors": "^2.8.5",
+    "express": "^4.21.2",
+    "jsonwebtoken": "^9.0.2",
     "serve": "^14.2.4",
     "@capacitor/android": "^6.2.0",
     "@capacitor/core": "^6.2.0",

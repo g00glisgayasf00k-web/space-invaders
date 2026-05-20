@@ -435,3 +435,131 @@
 .weapon-toast.show {
   opacity: 1;
 }
+
+.welcome-user {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 8px;
+  color: #4ade80;
+  text-align: center;
+  margin-bottom: 12px;
+}
+
+.auth-note {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 6px;
+  color: #6b7280;
+  text-align: center;
+  margin-bottom: 10px;
+  line-height: 1.6;
+}
+
+.auth-error {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 7px;
+  color: #f87171;
+  text-align: center;
+  margin: 8px 0;
+  display: none;
+  line-height: 1.5;
+}
+
+.auth-form {
+  padding-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.auth-form .menu-btn {
+  margin-top: 8px;
+}
+
+.arcade-input {
+  background: #111827;
+  border: 1px solid #374151;
+  border-radius: 4px;
+  color: #e5e7eb;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 8px;
+  padding: 10px 8px;
+  width: 100%;
+}
+
+.arcade-input:focus {
+  outline: none;
+  border-color: #facc15;
+}
+
+.input-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.input-row label {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 7px;
+  color: #6b7280;
+  text-transform: uppercase;
+}
+
+.lb-status {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 7px;
+  color: #6b7280;
+  text-align: center;
+  margin: 12px 0;
+}
+
+.leaderboard-list {
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.lb-row {
+  display: grid;
+  grid-template-columns: 28px 1fr 72px 32px;
+  gap: 6px;
+  align-items: center;
+  padding: 8px 4px;
+  border-bottom: 1px solid #1f2937;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 7px;
+}
+
+.lb-row.lb-me {
+  background: #052e16;
+  border-color: #166534;
+}
+
+.lb-rank {
+  color: #facc15;
+  text-align: center;
+}
+
+.lb-name {
+  color: #e5e7eb;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lb-score {
+  color: #facc15;
+  text-align: right;
+}
+
+.lb-lvl {
+  color: #6b7280;
+  text-align: right;
+  font-size: 6px;
+}
+
+.lb-empty {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 7px;
+  color: #6b7280;
+  text-align: center;
+  padding: 24px 8px;
+  line-height: 1.8;
+}

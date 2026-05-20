@@ -11,6 +11,7 @@ import {
 import { AudioManager } from './audio.js';
 import { InputManager } from './input.js';
 import { trackAlienKill, trackUfoHit, saveLastScore, loadStats } from './menu.js';
+import { submitScore, isLoggedIn } from './api.js';
 import {
   POWERUP,
   POWERUP_DURATION,
@@ -601,10 +602,13 @@ export class SpaceInvadersGame {
     }
   }
 
-  _gameOver() {
+  async _gameOver() {
     this.state = 'gameover';
     this.gameOverTimer = 3;
     if (this.score > 0) saveLastScore(this.score);
+    if (isLoggedIn() && this.score > 0) {
+      submitScore(this.score, this.level).catch(() => {});
+    }
     this.audio.gameOver();
   }
 
