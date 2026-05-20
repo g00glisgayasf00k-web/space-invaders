@@ -97,9 +97,13 @@ export class MenuUI {
   refreshWelcome() {
     const s = loadStats();
     const hi = document.getElementById('welcome-high');
+    const games = document.getElementById('welcome-games');
     const last = document.getElementById('welcome-last');
     if (hi) hi.textContent = formatScore(s.highScore);
-    if (last) last.textContent = formatScore(s.lastScore);
+    if (games) games.textContent = String(s.gamesPlayed);
+    if (last) {
+      last.textContent = s.lastScore > 0 ? formatScore(s.lastScore) : '------';
+    }
   }
 
   refreshAccount() {

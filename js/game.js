@@ -3,9 +3,9 @@ import {
   COLORS,
   drawPixelSprite,
   drawPlayerShip,
+  drawPaletteSprite,
   drawAlienBullet,
   drawPlayerBullet,
-  drawPowerupPickup,
   snap,
 } from './sprites.js';
 import { AudioManager } from './audio.js';
@@ -14,16 +14,15 @@ import { trackAlienKill, trackUfoHit, saveLastScore, loadStats } from './menu.js
 import {
   POWERUP,
   POWERUP_DURATION,
-  POWERUP_LABELS,
-  POWERUP_COLORS,
   rollPowerup,
+  powerupToastMessage,
 } from './powerups.js';
 
 const GAME_WIDTH = 224;
 const GAME_HEIGHT = 256;
 const UFO_POINTS = [50, 100, 150, 300];
-const BULLET_W = 4;
-const BULLET_H = 8;
+const BULLET_W = 2;
+const BULLET_H = 2;
 const MAX_BULLETS_NORMAL = 3;
 const MAX_BULLETS_RAPID = 8;
 
@@ -69,7 +68,6 @@ export class SpaceInvadersGame {
     this.bullets = [];
     this.alienBullets = [];
     this.explosions = [];
-    this.drops = [];
     this.ufo = null;
     this.ufoTimer = 8 + Math.random() * 12;
 
@@ -227,11 +225,11 @@ export class SpaceInvadersGame {
     const y0 = bullet.py ?? bullet.y;
     const x1 = bullet.x;
     const y1 = bullet.y;
-    const steps = 5;
+    const steps = 4;
     for (let i = 0; i <= steps; i++) {
       const t = i / steps;
-      const cx = x0 + (x1 - x0) * t - BULLET_W / 2;
-      const cy = y0 + (y1 - y0) * t - BULLET_H;
+      const cx = snap(x0 + (x1 - x0) * t - BULLET_W / 2);
+      const cy = snap(y0 + (y1 - y0) * t - BULLET_H);
       if (this._rectHit(cx, cy, BULLET_W, BULLET_H, bx, by, bw, bh)) return true;
     }
     return false;
@@ -239,8 +237,24 @@ export class SpaceInvadersGame {
 
   _alienHitbox(a) {
     const sp = SPRITES[a.type];
-    const pad = 0;
-    return { x: a.x + pad, y: a.y + pad, w: sp.width - pad * 2, h: sp.height - pad * 2 };
+    const padX = sp.width >= 11 ? 3 : 2;
+    const padY = 2;
+    return {
+      x: a.x + padX,
+      y: a.y + padY,
+      w: sp.width - padX * 2,
+      h: sp.height - padY - 1,
+    };
+  }
+
+  _ufoHitbox() {
+    const pad = 2;
+    return {
+      x: this.ufo.x + pad,
+      y: this.ufo.y + 1,
+      w: SPRITES.ufo.width - pad * 2,
+      h: SPRITES.ufo.height - 2,
+    };
   }
 
   _moveAliens() {
@@ -303,21 +317,8 @@ export class SpaceInvadersGame {
     this.audio.ufo();
   }
 
-  _spawnDrop(x, y, type) {
-    this.drops.push({
-      x: x - 2,
-      y: y + 4,
-      vy: 38,
-      type,
-      color: POWERUP_COLORS[type],
-      w: 7,
-      h: 7,
-    });
-  }
-
   _applyPowerup(type) {
-    const label = POWERUP_LABELS[type];
-    this.menu?.showPowerUp(label);
+    this.menu?.showPowerUp(powerupToastMessage(type));
 
     switch (type) {
       case POWERUP.DOUBLE:
@@ -422,9 +423,9 @@ export class SpaceInvadersGame {
     if (!this.ufo) return;
     const u = this.ufo;
     this.score += u.points;
-    this._addExplosion(u.x + 6, u.y + 2);
+    this._addExplosion(u.x + 5, u.y + 1);
     trackUfoHit();
-    this._spawnDrop(u.x + SPRITES.ufo.width / 2 - 2, u.y + 3, rollPowerup());
+    this._applyPowerup(rollPowerup());
     this.ufo = null;
   }
 
@@ -498,24 +499,6 @@ export class SpaceInvadersGame {
     }
     this.bullets = this.bullets.filter((b) => b.y > -12 && b.x > -12 && b.x < GAME_WIDTH + 12);
 
-    for (const d of this.drops) {
-      d.y += d.vy * dt;
-      if (this._rectHit(
-        this.player.x + 2,
-        this.player.y + 2,
-        this.player.width - 4,
-        this.player.height - 2,
-        d.x,
-        d.y,
-        d.w,
-        d.h
-      )) {
-        this._applyPowerup(d.type);
-        d.y = 9999;
-      }
-    }
-    this.drops = this.drops.filter((d) => d.y < GAME_HEIGHT + 12);
-
     for (const b of this.alienBullets) {
       b.y += b.vy * dt;
       b.frame += dt * 12;
@@ -526,9 +509,8 @@ export class SpaceInvadersGame {
       let hit = false;
 
       if (this.ufo) {
-        const uw = SPRITES.ufo.width;
-        const uh = SPRITES.ufo.height;
-        if (this._bulletHitsBox(b, this.ufo.x, this.ufo.y, uw, uh)) {
+        const box = this._ufoHitbox();
+        if (this._bulletHitsBox(b, box.x, box.y, box.w, box.h)) {
           this._destroyUfo();
           hit = true;
         }
@@ -622,7 +604,7 @@ export class SpaceInvadersGame {
   _gameOver() {
     this.state = 'gameover';
     this.gameOverTimer = 3;
-    saveLastScore(this.score);
+    if (this.score > 0) saveLastScore(this.score);
     this.audio.gameOver();
   }
 
@@ -635,7 +617,6 @@ export class SpaceInvadersGame {
     });
     this.bullets = [];
     this.alienBullets = [];
-    this.drops = [];
     this.alienMoveTimer = 0;
     this.state = 'playing';
     this._updateHud();
@@ -707,11 +688,7 @@ export class SpaceInvadersGame {
     }
 
     if (this.ufo) {
-      drawPixelSprite(ctx, SPRITES.ufo, this.ufo.x, this.ufo.y, 1);
-    }
-
-    for (const d of this.drops) {
-      drawPowerupPickup(ctx, d, 1, Math.floor(this.animFrame * 6));
+      drawPaletteSprite(ctx, SPRITES.ufo, this.ufo.x, this.ufo.y, 1);
     }
 
     const blink = this.state !== 'gameover' || Math.floor(this.animFrame * 4) % 2 === 0;

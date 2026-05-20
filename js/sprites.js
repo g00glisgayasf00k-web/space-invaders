@@ -120,19 +120,22 @@ export const SPRITES = {
     height: 7,
   },
 
+  // Classic mystery ship — 1=hull, 2=cockpit window
   ufo: {
     pixels: [
-      [0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0],
-      [0,0,0,0,1,1,1,1,1,0,0,0,0,0,0,0],
-      [0,0,0,1,1,1,1,1,1,1,0,0,0,0,0,0],
-      [0,0,1,1,0,1,1,1,1,0,1,1,0,0,0,0],
-      [1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0],
-      [0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,0],
-      [1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0],
+      [0,0,0,0,1,1,1,0,0,0,0,0,0,0],
+      [0,0,0,1,1,1,1,1,0,0,0,0,0,0],
+      [0,0,1,1,1,1,1,1,1,0,0,0,0,0],
+      [0,1,1,2,1,1,1,1,2,1,1,0,0,0],
+      [1,1,1,1,1,1,1,1,1,1,1,0,0,0],
+      [0,0,1,1,1,1,1,1,1,0,0,0,0,0],
     ],
-    color: COLORS.orange,
-    width: 16,
-    height: 7,
+    palette: {
+      1: COLORS.orange,
+      2: '#ffffff',
+    },
+    width: 14,
+    height: 6,
   },
 
   bunker: {
@@ -183,7 +186,7 @@ export function snap(v) {
   return v | 0;
 }
 
-export function drawPlayerShip(ctx, sprite, x, y, scale = 1) {
+export function drawPaletteSprite(ctx, sprite, x, y, scale = 1) {
   const pixels = sprite.pixels;
   const palette = sprite.palette || { 1: sprite.color || COLORS.yellow };
   const ox = snap(x);
@@ -200,6 +203,8 @@ export function drawPlayerShip(ctx, sprite, x, y, scale = 1) {
     }
   }
 }
+
+export const drawPlayerShip = drawPaletteSprite;
 
 export function drawPixelSprite(ctx, sprite, x, y, scale = 1, frameIndex = 0) {
   const pixels = sprite.frames
@@ -251,17 +256,3 @@ export function drawPlayerBullet(ctx, bullet, scale = 1) {
   ctx.fillRect(x + 1, y, s, s);
 }
 
-export function drawPowerupPickup(ctx, pickup, scale = 1, anim = 0) {
-  const s = Math.max(1, snap(scale));
-  const ox = snap(pickup.x);
-  const oy = snap(pickup.y);
-  const pulse = anim % 2 === 0;
-  const color = pickup.color;
-
-  ctx.fillStyle = pulse ? color : '#ffffff';
-  ctx.fillRect(ox, oy + s, s * 3, s);
-  ctx.fillRect(ox + s, oy, s, s * 5);
-  ctx.fillRect(ox + s * 2, oy + s, s, s * 3);
-  ctx.fillStyle = '#000';
-  ctx.fillRect(ox + s, oy + s * 2, s, s);
-}

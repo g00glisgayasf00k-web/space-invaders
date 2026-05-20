@@ -1,4 +1,4 @@
-const CACHE = 'space-invaders-v3';
+const CACHE = 'space-invaders-v4';
 const ASSETS = [
   './',
   './index.html',

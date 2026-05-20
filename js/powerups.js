@@ -34,9 +34,17 @@ export const POWERUP_LABELS = {
   [POWERUP.TRIPLE]: 'TRIPLE SHOT',
   [POWERUP.RAPID]: 'RAPID FIRE',
   [POWERUP.LIFE]: 'EXTRA LIFE',
-  [POWERUP.SCORE]: 'BONUS 500',
+  [POWERUP.SCORE]: 'BONUS +500',
   [POWERUP.SHIELD]: 'SHIELD',
 };
+
+const INSTANT_POWERUPS = new Set([POWERUP.LIFE, POWERUP.SCORE]);
+
+export function powerupToastMessage(type) {
+  const label = POWERUP_LABELS[type] || 'POWER UP';
+  if (INSTANT_POWERUPS.has(type)) return label;
+  return `${label} — ${POWERUP_DURATION}s`;
+}
 
 export const POWERUP_COLORS = {
   [POWERUP.DOUBLE]: '#4ade80',
