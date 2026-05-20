@@ -22,10 +22,10 @@ import {
 const GAME_WIDTH = 224;
 const GAME_HEIGHT = 256;
 const UFO_POINTS = [50, 100, 150, 300];
-const BULLET_W = 2;
-const BULLET_H = 2;
-const MAX_BULLETS_NORMAL = 3;
-const MAX_BULLETS_RAPID = 8;
+const BULLET_HALF_W = 1.5;
+const BULLET_HALF_H = 2;
+const MAX_BULLETS_NORMAL = 4;
+const MAX_BULLETS_RAPID = 10;
 
 export class SpaceInvadersGame {
   constructor(canvas) {
@@ -220,31 +220,61 @@ export class SpaceInvadersGame {
     return ax < bx + bw && ax + aw > bx && ay < by + bh && ay + ah > by;
   }
 
-  /** Swept bullet collision — fixes fast bullets passing through targets */
-  _bulletHitsBox(bullet, bx, by, bw, bh) {
+  /** Sample bullet path from prev position to current (works for straight & spread shots) */
+  _bulletPathHitsBox(bullet, bx, by, bw, bh) {
     const x0 = bullet.px ?? bullet.x;
     const y0 = bullet.py ?? bullet.y;
     const x1 = bullet.x;
     const y1 = bullet.y;
-    const steps = 4;
+    const dist = Math.hypot(x1 - x0, y1 - y0);
+    const steps = Math.max(8, Math.ceil(dist / 1.2));
+
     for (let i = 0; i <= steps; i++) {
       const t = i / steps;
-      const cx = snap(x0 + (x1 - x0) * t - BULLET_W / 2);
-      const cy = snap(y0 + (y1 - y0) * t - BULLET_H);
-      if (this._rectHit(cx, cy, BULLET_W, BULLET_H, bx, by, bw, bh)) return true;
+      const x = x0 + (x1 - x0) * t;
+      const y = y0 + (y1 - y0) * t;
+      if (this._rectHit(
+        x - BULLET_HALF_W,
+        y - BULLET_HALF_H,
+        BULLET_HALF_W * 2,
+        BULLET_HALF_H * 2,
+        bx,
+        by,
+        bw,
+        bh
+      )) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  _bulletPathHitsBunker(bullet) {
+    const x0 = bullet.px ?? bullet.x;
+    const y0 = bullet.py ?? bullet.y;
+    const x1 = bullet.x;
+    const y1 = bullet.y;
+    const dist = Math.hypot(x1 - x0, y1 - y0);
+    const steps = Math.max(6, Math.ceil(dist / 1.5));
+
+    for (let i = 0; i <= steps; i++) {
+      const t = i / steps;
+      const x = x0 + (x1 - x0) * t;
+      const y = y0 + (y1 - y0) * t;
+      if (this._hitBunker(x, y)) return true;
     }
     return false;
   }
 
   _alienHitbox(a) {
     const sp = SPRITES[a.type];
-    const padX = sp.width >= 11 ? 3 : 2;
-    const padY = 2;
+    const padX = 2;
+    const padY = 1;
     return {
       x: a.x + padX,
       y: a.y + padY,
-      w: sp.width - padX * 2,
-      h: sp.height - padY - 1,
+      w: Math.max(2, sp.width - padX * 2),
+      h: Math.max(3, sp.height - padY * 2),
     };
   }
 
@@ -385,35 +415,36 @@ export class SpaceInvadersGame {
 
   _firePlayer() {
     if (this.player.cooldown > 0) return;
-    if (this.bullets.length >= this._maxBullets()) return;
 
     const cx = this.player.x + this.player.width / 2;
-    const cy = this.player.y;
-    const speed = 220;
+    const cy = this.player.y - 1;
+    const speed = 240;
 
     const patterns = [
-      [{ vx: 0, vy: -speed }],
+      [{ ox: 0, vx: 0, vy: -speed }],
       [
-        { vx: -22, vy: -speed },
-        { vx: 22, vy: -speed },
+        { ox: -5, vx: -38, vy: -speed },
+        { ox: 5, vx: 38, vy: -speed },
       ],
       [
-        { vx: -48, vy: -speed },
-        { vx: 0, vy: -speed },
-        { vx: 48, vy: -speed },
+        { ox: -6, vx: -52, vy: -speed },
+        { ox: 0, vx: 0, vy: -speed },
+        { ox: 6, vx: 52, vy: -speed },
       ],
     ];
-    const angles = patterns[this.spread] || patterns[0];
+    const volley = patterns[this.spread] || patterns[0];
+    const slots = this._maxBullets() - this.bullets.length;
+    if (slots < volley.length) return;
 
-    for (const a of angles) {
-      if (this.bullets.length >= this._maxBullets()) break;
+    for (const shot of volley) {
+      const sx = cx + shot.ox;
       this.bullets.push({
-        x: cx,
+        x: sx,
         y: cy,
-        px: cx,
+        px: sx,
         py: cy,
-        vx: a.vx,
-        vy: a.vy,
+        vx: shot.vx,
+        vy: shot.vy,
       });
     }
     this.player.cooldown = this._fireCooldown();
@@ -507,11 +538,12 @@ export class SpaceInvadersGame {
     this.alienBullets = this.alienBullets.filter((b) => b.y < GAME_HEIGHT + 8);
 
     for (const b of this.bullets) {
+      if (b.dead) continue;
       let hit = false;
 
       if (this.ufo) {
         const box = this._ufoHitbox();
-        if (this._bulletHitsBox(b, box.x, box.y, box.w, box.h)) {
+        if (this._bulletPathHitsBox(b, box.x, box.y, box.w, box.h)) {
           this._destroyUfo();
           hit = true;
         }
@@ -521,7 +553,7 @@ export class SpaceInvadersGame {
         for (const a of this.aliens) {
           if (!a.alive) continue;
           const box = this._alienHitbox(a);
-          if (this._bulletHitsBox(b, box.x, box.y, box.w, box.h)) {
+          if (this._bulletPathHitsBox(b, box.x, box.y, box.w, box.h)) {
             a.alive = false;
             this.score += SPRITES[a.type].points;
             trackAlienKill();
@@ -532,14 +564,11 @@ export class SpaceInvadersGame {
         }
       }
 
-      if (!hit) {
-        const bx = b.x;
-        const by = b.y;
-        if (this._hitBunker(bx, by) || this._hitBunker(bx, by - 3)) hit = true;
-      }
-      if (hit) b.y = -999;
+      if (!hit && this._bulletPathHitsBunker(b)) hit = true;
+
+      if (hit) b.dead = true;
     }
-    this.bullets = this.bullets.filter((b) => b.y > -100);
+    this.bullets = this.bullets.filter((b) => !b.dead && b.y > -100);
 
     for (const b of this.alienBullets) {
       if (!this.shield && this._rectHit(

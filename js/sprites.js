@@ -248,11 +248,11 @@ export function drawAlienBullet(ctx, x, y, scale = 1, frame = 0) {
 
 export function drawPlayerBullet(ctx, bullet, scale = 1) {
   const s = Math.max(1, snap(scale));
-  const x = snap(bullet.x) - 1;
-  const y = snap(bullet.y);
+  const tipX = snap(bullet.x);
+  const tipY = snap(bullet.y);
   ctx.fillStyle = COLORS.yellow;
-  ctx.fillRect(x, y, 3, s * 3);
+  ctx.fillRect(tipX - 1, tipY, 3, s * 3);
   ctx.fillStyle = COLORS.white;
-  ctx.fillRect(x + 1, y, s, s);
+  ctx.fillRect(tipX, tipY, s, s);
 }
 
